@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { getTitle } from '@/config'
 import HeaderBar from '@/components/layout/HeaderBar.vue'
 import FooterView from '@/components/layout/FooterView.vue'
 
 const app = useAppStore()
+document.title = getTitle()
 
 const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
