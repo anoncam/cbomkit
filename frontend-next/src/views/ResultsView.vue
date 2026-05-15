@@ -1,27 +1,57 @@
 <script setup lang="ts">
-// Placeholder for the visualizer page. Real implementation lands in PR #3.
+import { ref } from 'vue'
+import ResultTitle from '@/components/results/ResultTitle.vue'
+import ReturnButton from '@/components/results/ReturnButton.vue'
+import KpiStrip from '@/components/results/KpiStrip.vue'
+import StatisticsView from '@/components/results/StatisticsView.vue'
+import DataTable from '@/components/results/DataTable.vue'
+import type { DetectionFilter } from '@/types/filter'
+
+const filter = ref<DetectionFilter | null>(null)
+
+function handleFilterChange(next: DetectionFilter) {
+  if (!next.value) {
+    filter.value = null
+    return
+  }
+  if (
+    filter.value &&
+    filter.value.kind === next.kind &&
+    filter.value.value === next.value
+  ) {
+    // Click the same slice to toggle off.
+    filter.value = null
+    return
+  }
+  filter.value = next
+}
+
+function clearFilter() {
+  filter.value = null
+}
 </script>
 
 <template>
-  <section class="results">
-    <h1>Results</h1>
-    <p>The redesigned visualizer ships in PR #3 of the Vue 3 migration.</p>
-  </section>
+  <div class="results">
+    <div class="results__toolbar">
+      <ReturnButton />
+    </div>
+    <ResultTitle />
+    <KpiStrip />
+    <StatisticsView @filter-change="handleFilterChange" />
+    <DataTable :filter="filter" @clear-filter="clearFilter" />
+  </div>
 </template>
 
 <style scoped>
 .results {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.results h1 {
-  margin: 0;
-  font-weight: 300;
-}
-
-.results p {
-  color: var(--cds-text-secondary);
+.results__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 }
 </style>

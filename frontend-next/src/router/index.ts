@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useCbomStore } from '@/stores/cbom'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -10,6 +11,11 @@ const routes: RouteRecordRaw[] = [
     path: '/results',
     name: 'results',
     component: () => import('@/views/ResultsView.vue'),
+    beforeEnter: () => {
+      const cbomStore = useCbomStore()
+      if (!cbomStore.cbom) return { name: 'home' }
+      return true
+    },
   },
 ]
 

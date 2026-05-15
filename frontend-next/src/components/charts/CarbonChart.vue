@@ -60,8 +60,31 @@ const props = defineProps<{
   options?: Record<string, any>
 }>()
 
+const emit = defineEmits<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (event: 'datum-click', datum: any): void
+}>()
+
+// Map of chart types → Carbon Charts event names that emit clicked datums.
+// Names sourced from @carbon/charts/dist/interfaces/events.d.ts.
+const CLICK_EVENT_NAMES: Record<CarbonChartType, string[]> = {
+  area: ['scatter-click'],
+  'area-stacked': ['scatter-click'],
+  bar: ['bar-click'],
+  'bar-grouped': ['bar-click'],
+  'bar-stacked': ['bar-click'],
+  'circle-pack': ['circle-leaf-click'],
+  donut: ['pie-slice-click'],
+  gauge: [],
+  line: ['scatter-click'],
+  pie: ['pie-slice-click'],
+  scatter: ['scatter-click'],
+  treemap: ['leaf-click'],
+}
+
 const container = ref<HTMLDivElement | null>(null)
 let chart: InstanceType<ChartCtor> | null = null
+const eventCleanups: Array<() => void> = []
 
 const app = useAppStore()
 
@@ -83,9 +106,25 @@ function mountChart() {
     data: props.data,
     options: buildOptions(),
   })
+  attachClickHandlers()
+}
+
+function attachClickHandlers() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const services = (chart as any)?.services
+  if (!services?.events) return
+  for (const eventName of CLICK_EVENT_NAMES[props.type]) {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail as { datum?: unknown } | undefined
+      emit('datum-click', detail?.datum ?? detail)
+    }
+    services.events.addEventListener(eventName, handler)
+    eventCleanups.push(() => services.events.removeEventListener(eventName, handler))
+  }
 }
 
 function destroyChart() {
+  for (const cleanup of eventCleanups.splice(0)) cleanup()
   chart?.destroy()
   chart = null
 }
