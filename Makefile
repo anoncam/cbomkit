@@ -12,23 +12,16 @@ build-backend-image: build-backend
 		-f src/main/docker/Dockerfile.jvm \
 		. \
 		--load
-# build the container image for the frontend
+# build the container image for the frontend (Vue 3 + Vite, built inside the image)
 build-frontend-image:
 	$(ENGINE) build \
 		-t cbomkit-frontend:${VERSION} \
 		-f frontend/docker/Dockerfile \
 		./frontend \
 		--load
-# Vue 3 migration (PR #2+): run the next-gen frontend dev server in parallel on :8002
-dev-frontend-next:
-	cd frontend-next && npm install && npm run dev
-# build the container image for the next-gen (Vue 3) frontend
-build-frontend-next-image:
-	$(ENGINE) build \
-		-t cbomkit-frontend-next:${VERSION} \
-		-f frontend-next/docker/Dockerfile \
-		./frontend-next \
-		--load
+# run the Vite dev server locally for the frontend
+dev-frontend-local:
+	cd frontend && npm install && npm run dev
 # run the dev setup using docker/podman compose
 dev:
 	env CBOMKIT_VERSION=${VERSION} CBOMKIT_VIEWER=false POSTGRESQL_AUTH_USERNAME=cbomkit POSTGRESQL_AUTH_PASSWORD=cbomkit $(ENGINE)-compose --profile dev up -d
