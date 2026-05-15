@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/app'
 import { getTitle } from '@/config'
 import HeaderBar from '@/components/layout/HeaderBar.vue'
 import FooterView from '@/components/layout/FooterView.vue'
+import NotificationsView from '@/components/global/NotificationsView.vue'
 
 const app = useAppStore()
 document.title = getTitle()
@@ -36,6 +37,7 @@ watch(
 <template>
   <div class="app-shell">
     <HeaderBar />
+    <NotificationsView />
     <main class="app-main">
       <RouterView />
     </main>

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useScanStore } from '@/stores/scan'
 import ResultTitle from '@/components/results/ResultTitle.vue'
 import ReturnButton from '@/components/results/ReturnButton.vue'
 import KpiStrip from '@/components/results/KpiStrip.vue'
 import StatisticsView from '@/components/results/StatisticsView.vue'
 import DataTable from '@/components/results/DataTable.vue'
+import LoaderView from '@/components/results/LoaderView.vue'
 import type { DetectionFilter } from '@/types/filter'
 
+const scan = useScanStore()
 const filter = ref<DetectionFilter | null>(null)
 
 function handleFilterChange(next: DetectionFilter) {
@@ -14,12 +17,7 @@ function handleFilterChange(next: DetectionFilter) {
     filter.value = null
     return
   }
-  if (
-    filter.value &&
-    filter.value.kind === next.kind &&
-    filter.value.value === next.value
-  ) {
-    // Click the same slice to toggle off.
+  if (filter.value && filter.value.kind === next.kind && filter.value.value === next.value) {
     filter.value = null
     return
   }
@@ -34,6 +32,7 @@ function clearFilter() {
 <template>
   <div class="results">
     <div class="results__toolbar">
+      <LoaderView v-if="scan.scanningStatus" />
       <ReturnButton />
     </div>
     <ResultTitle />
@@ -51,7 +50,9 @@ function clearFilter() {
 
 .results__toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 8px;
+  gap: 16px;
 }
 </style>
