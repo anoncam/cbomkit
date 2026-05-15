@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import FileUploader from '@/components/home/FileUploader.vue'
+import SearchOrUploadView from '@/components/home/SearchOrUploadView.vue'
 import { showResultFromUpload } from '@/lib/cbom'
 import { getComplianceReport } from '@/services/api'
 import { getTitle, isViewerOnly } from '@/config'
@@ -15,10 +15,6 @@ function loadSample() {
   void getComplianceReport(cbom)
   void router.push({ name: 'results' })
 }
-
-function goToResults() {
-  void router.push({ name: 'results' })
-}
 </script>
 
 <template>
@@ -26,29 +22,18 @@ function goToResults() {
     <header class="home__intro">
       <h1>{{ getTitle() }}</h1>
       <p>
-        Visualize a Cryptography Bill of Materials. Drop a CBOM JSON file below,
-        or load a sample to explore the new redesigned visualizer.
+        Visualize a Cryptography Bill of Materials. Scan a public Git repository,
+        upload a CBOM JSON, or load a sample to explore the visualizer.
       </p>
       <p v-if="isViewerOnly()" class="home__viewer-note">
         Running in viewer-only mode — scanning is disabled.
       </p>
-    </header>
-
-    <div class="home__actions">
-      <FileUploader class="home__uploader" @uploaded="goToResults" />
       <button class="home__sample" type="button" @click="loadSample">
         Try the sample CBOM
       </button>
-    </div>
+    </header>
 
-    <p class="home__hint">
-      Other examples are available at
-      <a
-        href="https://github.com/anoncam/cbomkit/tree/main/example"
-        target="_blank"
-        rel="noopener"
-      >cbomkit/example</a>.
-    </p>
+    <SearchOrUploadView />
   </section>
 </template>
 
@@ -56,7 +41,7 @@ function goToResults() {
 .home {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
 
 .home__intro h1 {
@@ -72,45 +57,24 @@ function goToResults() {
 }
 
 .home__viewer-note {
-  margin-top: 8px !important;
-  color: var(--cds-text-helper) !important;
+  margin-top: 8px;
+  color: var(--cds-text-helper);
   font-style: italic;
-}
-
-.home__actions {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-  flex-wrap: wrap;
-}
-
-.home__uploader {
-  flex: 1 1 320px;
 }
 
 .home__sample {
   appearance: none;
-  background: var(--cds-button-primary, #0f62fe);
-  color: var(--cds-text-on-color, #ffffff);
-  border: 0;
-  padding: 0 24px;
+  background: transparent;
+  border: 1px solid var(--cds-border-strong);
+  color: var(--cds-text-primary);
+  padding: 8px 16px;
   font-size: 0.875rem;
   cursor: pointer;
-  min-height: 88px;
-  min-width: 200px;
+  margin-top: 16px;
+  align-self: flex-start;
 }
 
 .home__sample:hover {
-  filter: brightness(1.1);
-}
-
-.home__hint {
-  font-size: 0.8125rem;
-  color: var(--cds-text-helper);
-  margin: 0;
-}
-
-.home__hint a {
-  color: var(--cds-link-primary);
+  background: var(--cds-layer-hover);
 }
 </style>
