@@ -26,14 +26,20 @@ export default defineConfig({
   server: {
     port: 8002,
     proxy: {
+      // Backend CORS allowlist is http://localhost:8001 (set in
+      // docker-compose.yaml via CBOMKIT_FRONTEND_URL_CORS). The Vite dev
+      // server runs on :8002, so both proxies forward an Origin header
+      // matching the allowlist to keep the backend happy.
       '/api': {
         target: 'http://localhost:8081',
         changeOrigin: true,
+        headers: { Origin: 'http://localhost:8001' },
       },
       '/v1/scan': {
         target: 'ws://localhost:8081',
         ws: true,
         changeOrigin: true,
+        headers: { Origin: 'http://localhost:8001' },
       },
     },
   },

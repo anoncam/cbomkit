@@ -3,6 +3,7 @@ import { useCbomStore } from '@/stores/cbom'
 import { useErrorsStore } from '@/stores/errors'
 import { useScanStore } from '@/stores/scan'
 import { setCbom, buildDependencyMaps, getDetectionsFromCbom } from '@/lib/cbom'
+import { getComplianceReport } from '@/services/api'
 import type { CbomComponent } from '@/types/cbom'
 import { ErrorStatus } from '@/types/errors'
 import {
@@ -75,6 +76,10 @@ function dispatchMessage(envelope: ScanMessageEnvelope): void {
         const cbom = JSON.parse(envelope.message)
         setCbom(cbom)
         cbomStore.setDependencies(buildDependencyMaps(cbom, getDetectionsFromCbom(cbom)))
+        // Trigger the compliance check once the scan produces a CBOM. The
+        // legacy frontend kicked this off from a watcher; we do it here so
+        // the scan flow and the upload flow both produce a policy result.
+        void getComplianceReport(cbom)
         console.log('Received CBOM from scanning')
       } catch (error) {
         console.error('Failed to parse CBOM payload:', error)
@@ -240,6 +245,12 @@ export function connectAndScan(
   scan.resetScanningInfo()
   setCodeOrigin(gitBranch, gitSubfolder)
   setCredentials(credentials)
+  // Pre-set the scan state so the router guard on /results lets the page
+  // through synchronously, before the WebSocket open event fires.
+  scan.isScanning = true
+  scan.scanningStatus = ScanState.LOADING
+  scan.scanningStatusMessage = 'Connecting…'
+  scan.startTime = new Date()
   const clientId = uuid4()
   startWebSocket(`${API_SCAN_URL}/${clientId}`)
 }
