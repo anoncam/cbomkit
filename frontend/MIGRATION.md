@@ -44,7 +44,9 @@ All migration PRs target the `vue3-migration` branch. The final cutover PR targe
 
 ## PR sequence
 
-### PR #1 — Scaffold + design tokens + chart shell *(this PR)*
+> Note: the original 4-PR plan was collapsed by one. PR #1 (this PR) now contains both the plan and the Vite/Vue 3 scaffold. PR #2 ports services/state. PR #3 is the visualizer redesign. PR #4 ports the home/scan flow and performs the cutover.
+
+### PR #1 — Plan + Scaffold + design tokens + chart shell
 
 Goal: a runnable Vue 3 + Vite + TS app at `frontend-next/` that loads Carbon styles, renders the header + footer + dark mode toggle, and shows one placeholder chart. **No feature parity yet.**
 
@@ -80,15 +82,17 @@ Deliverables:
 
 Out of scope for PR #1: porting any feature pages, charts, scan flow, results, modals, file upload, API helpers. Those land in PRs #2–#4.
 
-### PR #2 — State, services, and routing
+### PR #2 — State, services, and types
 
 - Port `helpers/api.js` → `src/services/api.ts` (typed fetch wrappers, error contract preserved).
-- Port `helpers/scan.js` → `src/services/scan.ts` (typed WebSocket client; message-type discriminated union for `LABEL | ERROR | WARNING | DETECTION | CBOM | …`).
-- Port `helpers/cbom.js`, `compliance.js`, `compliance-local.js`, `info.js`, `general.js` → `src/services/` and `src/lib/`.
-- Migrate `model.js` → `src/stores/scan.ts`, `src/stores/cbom.ts`, `src/stores/errors.ts` (Pinia, split by responsibility).
+- Port `helpers/scan.js` → `src/services/scan.ts` (typed WebSocket client; message-type discriminated union for `LABEL | ERROR | WARNING | DETECTION | CBOM | GITURL | BRANCH | FOLDER | SCANNED_FILE_COUNT | SCANNED_NUMBER_OF_LINES | SCANNED_DURATION | REVISION_HASH`).
+- Port `helpers/cbom.js`, `compliance.js`, `compliance-local.js`, `info.js`, `general.js` → `src/lib/`.
+- Migrate `model.js` → `src/stores/scan.ts`, `src/stores/cbom.ts`, `src/stores/errors.ts` (Pinia, split by responsibility). Theme state stays in `src/stores/app.ts`.
 - Define TS types for the CBOM schema, policy check result, and WebSocket protocol in `src/types/`.
-- Router gains real routes for `/`, `/scan/:clientId?`, `/results/:cbomRef?`, `/about`.
-- No UI rewrite yet — existing legacy app still owns the user-facing experience.
+- Replace `app.config.js` with `src/config.ts` that composes URLs from `CBOMKIT_*` env vars.
+- Copy `crypto-dictionary.json` into `src/data/` for the term-info helpers.
+- Router gains real routes in PR #3 alongside the visualizer port; for now just the two existing placeholder routes remain.
+- No UI rewrite yet — the legacy app still owns the user-facing experience.
 
 ### PR #3 — Visualizer redesign *(the actual goal)*
 
@@ -103,7 +107,7 @@ This is where the chart UX improves. Built on the scaffolded `CarbonChart` wrapp
 - Empty and loading states for every chart (currently the donuts render blank on empty data).
 - Port `ResultsView.vue`, `ResultTitle.vue`, `RegulatorResults.vue`, `DataTable.vue`, `ComplianceIcon.vue`, `LoaderView.vue`, `ReturnButton.vue` and the four modal subcomponents.
 
-### PR #4 — Scan flow + remaining pages, then cutover
+### PR #4 — Home/scan/upload pages, tests, then cutover
 
 - Port `HomeView.vue`, `SearchOrUploadView.vue`, `SearchBar.vue`, `FileUploader.vue`, `ListTable.vue`, `ExplainerView.vue`, `PluginExplainerView.vue`, `TrySampleButton.vue`, `NotificationsView.vue`, `DebugView.vue`.
 - Wire the redesigned visualizer to the live scan flow.
