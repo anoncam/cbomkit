@@ -8,7 +8,17 @@ ARG APP_VERSION=0.0.0
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# The multi-arch image build (linux/amd64 + linux/arm64, both musl) needs
+# platform-specific Rolldown native bindings. `npm ci` fails the
+# alt-platform legs entirely; `npm install` (even without --no-package-lock)
+# also misses them due to a long-standing npm optionalDependencies bug —
+# https://github.com/npm/cli/issues/4828, which Rolldown's runtime error
+# explicitly references. Workaround per the Rolldown maintainers: drop the
+# lockfile inside the build stage so the resolver runs fresh against the
+# build platform. Determinism on non-native deps is preserved by the pinned
+# package.json. The lockfile remains the source of truth for `npm ci` in CI
+# matrix runs (which only build for the host platform).
+RUN rm -f package-lock.json && npm install --include=dev --no-audit --no-fund --no-progress
 
 COPY . .
 
