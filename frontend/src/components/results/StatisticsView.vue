@@ -235,8 +235,18 @@ const hasCompliance = computed(() => hasValidComplianceResults(cbomStore.policyC
 <style scoped>
 .charts__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* Force four equal columns regardless of intrinsic content width. `minmax(0,
+     1fr)` is required so Carbon Charts' legends (which have a min-content
+     wider than the column) can't push the grid to wrap to a second row. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+}
+
+/* Drop to two columns on narrow viewports where four would be unreadable. */
+@media (max-width: 720px) {
+  .charts__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .charts__card {
