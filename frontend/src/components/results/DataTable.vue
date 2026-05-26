@@ -11,6 +11,7 @@ import type { DetectionFilter } from '@/types/filter'
 const props = defineProps<{ filter: DetectionFilter | null }>()
 const emit = defineEmits<{
   (event: 'clear-filter'): void
+  (event: 'select-asset', asset: CbomComponent): void
 }>()
 
 const cbomStore = useCbomStore()
@@ -126,7 +127,17 @@ const filterDescription = computed(() => {
           <tr v-if="rows.length === 0" class="data-table__empty">
             <td colspan="5">No assets match the current filters.</td>
           </tr>
-          <tr v-for="(row, index) in rows" :key="(row['bom-ref'] ?? '') + '_' + index">
+          <tr
+            v-for="(row, index) in rows"
+            :key="(row['bom-ref'] ?? '') + '_' + index"
+            class="data-table__row"
+            tabindex="0"
+            role="button"
+            :aria-label="`View details for ${row.name ?? 'asset'}`"
+            @click="emit('select-asset', row)"
+            @keydown.enter.prevent="emit('select-asset', row)"
+            @keydown.space.prevent="emit('select-asset', row)"
+          >
             <td class="data-table__compliance-cell">
               <ComplianceIcon :asset="row" />
               <span class="visually-hidden">{{ complianceLabelFor(row) }}</span>
@@ -251,6 +262,19 @@ const filterDescription = computed(() => {
   font-family: var(--cds-code-01-font-family, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.8125rem;
   color: var(--cds-text-secondary);
+}
+
+.data-table__row {
+  cursor: pointer;
+}
+
+.data-table__row:hover {
+  background: var(--cds-layer-hover);
+}
+
+.data-table__row:focus-visible {
+  outline: 2px solid var(--cds-focus, #0f62fe);
+  outline-offset: -2px;
 }
 
 .data-table__empty td {

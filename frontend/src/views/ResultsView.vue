@@ -7,10 +7,14 @@ import KpiStrip from '@/components/results/KpiStrip.vue'
 import StatisticsView from '@/components/results/StatisticsView.vue'
 import DataTable from '@/components/results/DataTable.vue'
 import LoaderView from '@/components/results/LoaderView.vue'
+import AssetDetailModal from '@/components/results/modal/AssetDetailModal.vue'
 import type { DetectionFilter } from '@/types/filter'
+import type { CbomComponent } from '@/types/cbom'
 
 const scan = useScanStore()
 const filter = ref<DetectionFilter | null>(null)
+const selectedAsset = ref<CbomComponent | null>(null)
+const modalOpen = ref(false)
 
 function handleFilterChange(next: DetectionFilter) {
   if (!next.value) {
@@ -27,6 +31,15 @@ function handleFilterChange(next: DetectionFilter) {
 function clearFilter() {
   filter.value = null
 }
+
+function selectAsset(asset: CbomComponent) {
+  selectedAsset.value = asset
+  modalOpen.value = true
+}
+
+function closeModal() {
+  modalOpen.value = false
+}
 </script>
 
 <template>
@@ -38,7 +51,16 @@ function clearFilter() {
     <ResultTitle />
     <KpiStrip />
     <StatisticsView @filter-change="handleFilterChange" />
-    <DataTable :filter="filter" @clear-filter="clearFilter" />
+    <DataTable
+      :filter="filter"
+      @clear-filter="clearFilter"
+      @select-asset="selectAsset"
+    />
+    <AssetDetailModal
+      :open="modalOpen"
+      :asset="selectedAsset"
+      @close="closeModal"
+    />
   </div>
 </template>
 

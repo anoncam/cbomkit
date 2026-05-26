@@ -107,46 +107,10 @@ const functionOptions = computed(() => ({
   },
 }))
 
-// ── Treemap: primitive → algorithm (new chart) ──────────────────────────────────
-interface TreemapLeaf {
-  name: string
-  value: number
-}
-interface TreemapParent {
-  name: string
-  children: TreemapLeaf[]
-}
-
-const treemapData = computed<TreemapParent[]>(() => {
-  const buckets = new Map<string, Map<string, number>>()
-  for (const detection of detections.value) {
-    const primitive = detection.cryptoProperties?.algorithmProperties?.primitive ?? 'unknown'
-    const algorithm = detection.name ?? 'unnamed'
-    if (!buckets.has(primitive)) buckets.set(primitive, new Map())
-    const inner = buckets.get(primitive)!
-    inner.set(algorithm, (inner.get(algorithm) ?? 0) + 1)
-  }
-  const rows: TreemapParent[] = []
-  for (const [primitive, children] of buckets) {
-    const childList: TreemapLeaf[] = []
-    for (const [name, value] of children) {
-      childList.push({ name, value })
-    }
-    rows.push({ name: capitalizeFirstLetter(primitive), children: childList })
-  }
-  return rows
-})
-
-const treemapOptions = computed(() => ({
-  resizable: true,
-  toolbar: { enabled: true },
-  legend: { enabled: false },
-}))
-
 // ── Click → filter dispatch ─────────────────────────────────────────────────────
 // Carbon Charts puts the clicked datum in slightly different shapes depending on
 // the chart type: pie/donut hand back `{ data: { group, value }, ... }` (d3 wrap),
-// treemap leaves give `{ name, value }`, and circle-pack returns the node data.
+// circle-pack returns the node data.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function unwrap(datum: any): any {
   if (datum && typeof datum === 'object' && 'data' in datum) return datum.data
@@ -172,12 +136,6 @@ function onFunctionClick(raw: any) {
 function onNameClick(raw: any) {
   const datum = unwrap(raw)
   emit('filter-change', { kind: 'name', value: datum?.name ?? datum?.group ?? null })
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function onTreemapClick(raw: any) {
-  const datum = unwrap(raw)
-  const value = datum?.name ?? null
-  emit('filter-change', { kind: 'name', value })
 }
 
 const isEmpty = computed(() => detections.value.length === 0)
@@ -270,25 +228,6 @@ const hasCompliance = computed(() => hasValidComplianceResults(cbomStore.policyC
           />
         </div>
       </article>
-
-      <article class="charts__card charts__card--wide">
-        <header class="charts__card-header">
-          <h3>Primitive → algorithm breakdown</h3>
-          <p class="muted">Click a tile to filter the table below</p>
-        </header>
-        <div class="charts__body charts__body--tall">
-          <p v-if="treemapData.length === 0" class="state state--empty">
-            No data to break down.
-          </p>
-          <CarbonChart
-            v-else
-            type="treemap"
-            :data="treemapData"
-            :options="treemapOptions"
-            @datum-click="onTreemapClick"
-          />
-        </div>
-      </article>
     </div>
   </section>
 </template>
@@ -296,7 +235,7 @@ const hasCompliance = computed(() => hasValidComplianceResults(cbomStore.policyC
 <style scoped>
 .charts__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
 
@@ -306,11 +245,11 @@ const hasCompliance = computed(() => hasValidComplianceResults(cbomStore.policyC
   padding: 16px 20px 20px;
   display: flex;
   flex-direction: column;
-  min-height: 320px;
-}
-
-.charts__card--wide {
-  grid-column: 1 / -1;
+  /* Fixed height — without this, Carbon Charts' fullscreen toolbar exit can
+     leave the inner SVG with a large intrinsic size that drags the card
+     vertically. Clipping with overflow:hidden absorbs any transient layout. */
+  height: 380px;
+  overflow: hidden;
 }
 
 .charts__card-header {
@@ -336,12 +275,9 @@ const hasCompliance = computed(() => hasValidComplianceResults(cbomStore.policyC
 
 .charts__body {
   flex: 1;
-  min-height: 240px;
+  min-height: 0;
   position: relative;
-}
-
-.charts__body--tall {
-  min-height: 360px;
+  overflow: hidden;
 }
 
 .state {

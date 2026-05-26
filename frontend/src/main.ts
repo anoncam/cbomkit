@@ -25,6 +25,8 @@ import '@carbon/web-components/es/components/notification/index.js'
 import '@carbon/web-components/es/components/checkbox/index.js'
 import '@carbon/web-components/es/components/tabs/index.js'
 import '@carbon/web-components/es/components/text-input/index.js'
+import '@carbon/web-components/es/components/modal/index.js'
+import '@carbon/web-components/es/components/structured-list/index.js'
 
 const app = createApp(App)
 app.use(createPinia())
